@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<input type=text  id="messageInput" value="Type Message Here" 
+onfocus="this.value=''">
+
+<button id="send" onclick="sendMessage()">Send Message</button>
+<script>
+    document.getElementById("text").addEventListener("keydown", function() {
+      event.preventDefault();
+      if (event.keyCode === 13) {
+        document.getElementById("send").click()
+      }  
+    }
+)
+
+function sendMessage() {
+
+    }
+</script>
+
+</html>
