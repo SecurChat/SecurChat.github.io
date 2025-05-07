@@ -1,21 +1,178 @@
 <!DOCTYPE html>
-<html lang="en-US">
-<input type=text  id="messageInput" value="Type Message Here" 
-onfocus="this.value=''">
-
-<button id="send" onclick="sendMessage()">Send Message</button>
-<script>
-    document.getElementById("text").addEventListener("keydown", function() {
-      event.preventDefault();
-      if (event.keyCode === 13) {
-        document.getElementById("send").click()
-      }  
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Chat App</title>
+  <style>
+    /* Basic page layout */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f1f1f1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
-)
-
-function sendMessage() {
-
+    /* Chat container styling */
+    .chat-container {
+      width: 90%;
+      max-width: 600px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      display: flex;
+      flex-direction: column;
+      height: 80vh;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
-</script>
+    .chat-header {
+      background: #007bff;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 1.2em;
+      border-top-left-radius: 5px;
+      border-top-right-radius: 5px;
+    }
+    /* Messages container */
+    .chat-messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      background: #e9ecef;
+    }
+    .message {
+      margin-bottom: 12px;
+      padding: 8px;
+      background: #fff;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .message span.username {
+      font-weight: bold;
+      margin-right: 5px;
+    }
+    .message small {
+      display: block;
+      color: #666;
+      font-size: 0.75em;
+      margin-top: 4px;
+    }
+    /* Input area */
+    .chat-input {
+      display: flex;
+      border-top: 1px solid #ccc;
+    }
+    .chat-input input {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      font-size: 1em;
+      outline: none;
+    }
+    .chat-input button {
+      padding: 12px 20px;
+      background: #007bff;
+      border: none;
+      color: white;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .chat-input button:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <!-- Chat App Container -->
+  <div class="chat-container">
+    <div class="chat-header">Simple Chat App</div>
+    <div class="chat-messages" id="chatMessages">
+      <!-- Chat messages will be loaded here -->
+    </div>
+    <div class="chat-input">
+      <input type="text" id="chatInput" placeholder="Type your message here..." />
+      <button id="sendBtn">Send</button>
+    </div>
+  </div>
 
+  <!-- Firebase and App Code -->
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-app.js";
+    import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-database.js";
+
+    // Your Firebase configuration
+    // Replace these values with your Firebase project configuration.
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    // Generate a random username for this session
+    const username = "User" + Math.floor(Math.random() * 1000);
+
+    // DOM elements
+    const chatMessages = document.getElementById("chatMessages");
+    const chatInput = document.getElementById("chatInput");
+    const sendBtn = document.getElementById("sendBtn");
+
+    // Reference to the "messages" node in the database
+    const messagesRef = ref(database, "messages/");
+
+    // Listen for new messages added to Firebase
+    onChildAdded(messagesRef, (data) => {
+      const msg = data.val();
+      displayMessage(msg.username, msg.message, msg.timestamp);
+    });
+
+    // Function to display a message in the chat window
+    function displayMessage(user, message, timestamp) {
+      const date = new Date(timestamp);
+      const timeString = date.toLocaleTimeString();
+
+      const msgDiv = document.createElement("div");
+      msgDiv.classList.add("message");
+      msgDiv.innerHTML = `<span class="username">${user}:</span>
+                          <span class="msg">${message}</span>
+                          <small>${timeString}</small>`;
+      chatMessages.appendChild(msgDiv);
+      // Auto-scroll to the newest message
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Send message on button click or when "Enter" is pressed
+    sendBtn.addEventListener("click", sendMessage);
+    chatInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        sendMessage();
+      }
+    });
+
+    // Function to send the message to Firebase
+    function sendMessage() {
+      const messageText = chatInput.value.trim();
+      if (messageText !== "") {
+        push(messagesRef, {
+          username: username,
+          message: messageText,
+          timestamp: Date.now()
+        });
+        chatInput.value = "";
+      }
+    }
+  </script>
+</body>
 </html>
